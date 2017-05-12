@@ -1,9 +1,10 @@
-var http = require('http');
+var express = require('express')
+var app = express();
+var indexRouter = require('./routes/index');
+var userRouter = require('./routes/users');
 
-http.createServer(function ( request, response) {
-	response.writeHead(200, {'Content-Type':'text/plain'});
+app.get('/',indexRouter);
 
-	response.end('Hello World\n');
-}).listen(8888);
+app.get('/users', userRouter);
 
-console.log('Server running at http://127.0.0.1:8888/');
+app.listen(3000);
