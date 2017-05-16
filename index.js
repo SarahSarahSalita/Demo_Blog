@@ -3,7 +3,7 @@ var express = require('express');
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var flash = require('connect-flash');
-var config = require('config-lite');
+var config = require('config-lite')(__dirname);
 var routes = require('./routes');
 var pkg = require('./package');
 
@@ -18,10 +18,10 @@ app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 // session 中间件
 app.use(session({
-  name: config.key,// 设置 cookie 中保存 session id 的字段名称
-  secret: config.secret,// 通过设置 secret 来计算 hash 值并放在 cookie 中，使产生的 signedCookie 防篡改
+  name: config.session.key,// 设置 cookie 中保存 session id 的字段名称
+  secret: config.session.secret,// 通过设置 secret 来计算 hash 值并放在 cookie 中，使产生的 signedCookie 防篡改
   cookie: {
-    maxAge: config.maxAge// 过期时间，过期后 cookie 中的 session id 自动删除
+    maxAge: config.session.maxAge// 过期时间，过期后 cookie 中的 session id 自动删除
   },
   store: new MongoStore({// 将 session 存储到 mongodb
     url: 'mongodb://localhost:27017/myblog'// mongodb 地址
@@ -29,6 +29,20 @@ app.use(session({
 }));
 // flash 中间价，用来显示通知
 app.use(flash());
+
+// 设置模板全局常量
+app.locals.blog = {
+  title: pkg.name,
+  description: pkg.description
+};
+
+// 添加模板必需的三个变量
+app.use(function (req, res, next) {
+  res.locals.user = req.session.user;
+  res.locals.success = req.flash('success').toString();
+  res.locals.error = req.flash('error').toString();
+  next();
+});
 
 // 路由
 routes(app);
